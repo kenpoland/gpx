@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GPX Analyzer</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-4 bg-gray-100">
+
+    <div class="bg-white p-8 rounded-2xl shadow-xl w-full max-w-4xl">
+        <h1 class="text-4xl font-extrabold text-center text-gray-800 mb-2">GPX Data Analyzer</h1>
+        <p class="text-center text-gray-500 mb-6">Upload a GPX file to view your activity's start time, finish time, total distance, total time, and average speed in two-hour intervals and 50km intervals.</p>
+
+        <!-- File Input -->
+        <div class="mb-8">
+            <label for="gpx-file" class="block text-sm font-medium text-gray-700 mb-2">Select GPX File</label>
+            <div class="mt-1 flex justify-center rounded-md border-2 border-dashed border-gray-300 px-6 pt-5 pb-6">
+                <div class="space-y-1 text-center">
+                    <svg class="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48" aria-hidden="true">
+                        <path d="M28 8H12a2 2 0 00-2 2v20m36-8V12a2 2 0 00-2-2h-8m-12 11l-5 5m5-5v12a2 2 0 01-2 2h-6a2 2 0 01-2-2v-6m-4-6l-4 4m4-4V8m8 0V4" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                    </svg>
+                    <div class="flex text-sm text-gray-600">
+                        <label for="gpx-file" class="relative cursor-pointer rounded-md bg-white font-medium text-blue-600 hover:text-blue-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-blue-500 focus-within:ring-offset-2">
+                            <span>Upload a file</span>
+                            <input id="gpx-file" name="gpx-file" type="file" class="sr-only" accept=".gpx">
+                        </label>
+                        <p class="pl-1">or drag and drop</p>
+                    </div>
+                    <p class="text-xs text-gray-500">GPX format only</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Progress and Status -->
+        <div id="status-message" class="text-center text-sm font-medium text-red-500 mb-4 hidden"></div>
+        <div id="loading-indicator" class="flex items-center justify-center space-x-2 text-blue-500 hidden mb-4">
+            <svg class="animate-spin h-5 w-5 text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            <span>Analyzing GPX data...</span>
+        </div>
+
+        <!-- Results Display -->
+        <div id="results" class="hidden">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                <div class="bg-blue-50 p-6 rounded-xl shadow-inner border border-blue-200">
+                    <h2 class="text-lg font-semibold text-gray-700 mb-1">Start Time</h2>
+                    <p id="start-time" class="text-xl font-bold text-gray-900"></p>
+                </div>
+                <div class="bg-blue-50 p-6 rounded-xl shadow-inner border border-blue-200">
+                    <h2 class="text-lg font-semibold text-gray-700 mb-1">Finish Time</h2>
+                    <p id="finish-time" class="text-xl font-bold text-gray-900"></p>
+                </div>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+                <div class="bg-blue-50 p-6 rounded-xl shadow-inner border border-blue-200">
+                    <h2 class="text-lg font-semibold text-gray-700 mb-1">Total Distance</h2>
+                    <p id="total-distance" class="text-xl font-bold text-gray-900"></p>
+                </div>
+                <div class="bg-blue-50 p-6 rounded-xl shadow-inner border border-blue-200">
+                    <h2 class="text-lg font-semibold text-gray-700 mb-1">Total Time</h2>
+                    <p id="total-time" class="text-xl font-bold text-gray-900"></p>
+                </div>
+            </div>
+
+            <h2 class="text-xl font-semibold text-gray-700 mb-4">Average Speed by Interval</h2>
+            <div class="overflow-x-auto rounded-xl shadow-md border border-gray-200 mb-8">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Interval</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Start Time</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">End Time</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Duration</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Distance</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Avg Speed (km/h)</th>
+                        </tr>
+                    </thead>
+                    <tbody id="two-hour-data" class="bg-white divide-y divide-gray-200">
+                        <!-- Speed data rows will be injected here by JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+
+            <h2 class="text-xl font-semibold text-gray-700 mb-4">Time per 50 km</h2>
+            <div class="overflow-x-auto rounded-xl shadow-md border border-gray-200">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Distance</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Time (cumulative)</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Pace (min/km)</th>
+                        </tr>
+                    </thead>
+                    <tbody id="fifty-km-data" class="bg-white divide-y divide-gray-200">
+                        <!-- 50 km data rows will be injected here by JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const fileInput = document.getElementById('gpx-file');
+            const statusMessage = document.getElementById('status-message');
+            const loadingIndicator = document.getElementById('loading-indicator');
+            const resultsDiv = document.getElementById('results');
+            const startTimeEl = document.getElementById('start-time');
+            const finishTimeEl = document.getElementById('finish-time');
+            const totalDistanceEl = document.getElementById('total-distance');
+            const totalTimeEl = document.getElementById('total-time');
+            const twoHourTableBody = document.getElementById('two-hour-data');
+            const fiftyKmTableBody = document.getElementById('fifty-km-data');
+
+            fileInput.addEventListener('change', handleFileSelect, false);
+
+            function showMessage(message, isError = false) {
+                statusMessage.textContent = message;
+                statusMessage.classList.remove('hidden');
+                if (isError) {
+                    statusMessage.classList.add('text-red-500');
+                    statusMessage.classList.remove('text-green-500');
+                } else {
+                    statusMessage.classList.add('text-green-500');
+                    statusMessage.classList.remove('text-red-500');
+                }
+            }
+
+            function handleFileSelect(event) {
+                const file = event.target.files[0];
+                if (!file) {
+                    return;
+                }
+
+                if (file.type !== "application/gpx+xml" && !file.name.endsWith('.gpx')) {
+                    showMessage('Please select a valid GPX file.', true);
+                    return;
+                }
+
+                // Hide previous results and show loading indicator
+                resultsDiv.classList.add('hidden');
+                statusMessage.classList.add('hidden');
+                loadingIndicator.classList.remove('hidden');
+
+                const reader = new FileReader();
+                reader.onload = async (e) => {
+                    const content = e.target.result;
+                    try {
+                        const data = parseGpx(content);
+                        if (data.trackPoints.length < 2) {
+                            showMessage('GPX file does not contain enough track points.', true);
+                            return;
+                        }
+                        displayResults(data);
+                    } catch (error) {
+                        showMessage('Error parsing GPX file: ' + error.message, true);
+                        console.error('Parsing error:', error);
+                    } finally {
+                        loadingIndicator.classList.add('hidden');
+                    }
+                };
+                reader.readAsText(file);
+            }
+
+            function parseGpx(xmlContent) {
+                const parser = new DOMParser();
+                const xmlDoc = parser.parseFromString(xmlContent, "text/xml");
+
+                if (xmlDoc.querySelector('parsererror')) {
+                    throw new Error('Invalid XML format.');
+                }
+
+                const trackPoints = [];
+                const trkpts = xmlDoc.querySelectorAll('trkpt');
+
+                trkpts.forEach(trkpt => {
+                    const lat = parseFloat(trkpt.getAttribute('lat'));
+                    const lon = parseFloat(trkpt.getAttribute('lon'));
+                    const timeEl = trkpt.querySelector('time');
+                    const time = timeEl ? new Date(timeEl.textContent) : null;
+
+                    if (!isNaN(lat) && !isNaN(lon) && time) {
+                        trackPoints.push({ lat, lon, time });
+                    }
+                });
+
+                return { trackPoints };
+            }
+
+            function toRad(degrees) {
+                return degrees * Math.PI / 180;
+            }
+
+            function haversineDistance(p1, p2) {
+                const R = 6371; // Radius of the Earth in km
+                const dLat = toRad(p2.lat - p1.lat);
+                const dLon = toRad(p2.lon - p1.lon);
+                const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+                          Math.cos(toRad(p1.lat)) * Math.cos(toRad(p2.lat)) *
+                          Math.sin(dLon / 2) * Math.sin(dLon / 2);
+                const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+                return R * c; // Distance in km
+            }
+
+            function displayResults(data) {
+                const points = data.trackPoints;
+                const startTime = points[0].time;
+                const finishTime = points[points.length - 1].time;
+                let totalDistanceKm = 0;
+                let lastPoint = points[0];
+
+                for (let i = 1; i < points.length; i++) {
+                    const currentPoint = points[i];
+                    totalDistanceKm += haversineDistance(lastPoint, currentPoint);
+                    lastPoint = currentPoint;
+                }
+                
+                const totalDurationMs = finishTime.getTime() - startTime.getTime();
+                const totalDurationFormatted = formatTime(totalDurationMs);
+                
+                startTimeEl.textContent = startTime.toLocaleString();
+                finishTimeEl.textContent = finishTime.toLocaleString();
+                totalDistanceEl.textContent = `${totalDistanceKm.toFixed(2)} km`;
+                totalTimeEl.textContent = totalDurationFormatted;
+
+                twoHourTableBody.innerHTML = '';
+                fiftyKmTableBody.innerHTML = '';
+                resultsDiv.classList.remove('hidden');
+
+                // --- Calculate Two-Hour Intervals ---
+                const twoHoursInMs = 2 * 60 * 60 * 1000;
+                let currentIntervalDistance = 0;
+                let currentIntervalStartTime = startTime;
+                lastPoint = points[0];
+                let intervalIndex = 1;
+
+                for (let i = 1; i < points.length; i++) {
+                    const currentPoint = points[i];
+                    const dist = haversineDistance(lastPoint, currentPoint);
+                    currentIntervalDistance += dist;
+                    const intervalDuration = currentPoint.time.getTime() - currentIntervalStartTime.getTime();
+
+                    if (intervalDuration >= twoHoursInMs || i === points.length - 1) {
+                        const durationHours = intervalDuration / (1000 * 60 * 60);
+                        const avgSpeed = durationHours > 0 ? (currentIntervalDistance / durationHours) : 0;
+                        
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${intervalIndex}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${currentIntervalStartTime.toLocaleTimeString()}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${currentPoint.time.toLocaleTimeString()}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${(intervalDuration / 3600000).toFixed(2)} hrs</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${currentIntervalDistance.toFixed(2)} km</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-gray-900">${avgSpeed.toFixed(2)} km/h</td>
+                        `;
+                        twoHourTableBody.appendChild(row);
+
+                        currentIntervalDistance = 0;
+                        currentIntervalStartTime = currentPoint.time;
+                        intervalIndex++;
+                    }
+                    lastPoint = currentPoint;
+                }
+
+                // Handle the last partial interval for two-hour table
+                if (currentIntervalDistance > 0 && points.length > 1) {
+                    const intervalDuration = finishTime.getTime() - currentIntervalStartTime.getTime();
+                    const durationHours = intervalDuration / (1000 * 60 * 60);
+                    const avgSpeed = durationHours > 0 ? (currentIntervalDistance / durationHours) : 0;
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${intervalIndex}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${currentIntervalStartTime.toLocaleTimeString()}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${finishTime.toLocaleTimeString()}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${(intervalDuration / 3600000).toFixed(2)} hrs</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${currentIntervalDistance.toFixed(2)} km</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-gray-900">${avgSpeed.toFixed(2)} km/h</td>
+                    `;
+                    twoHourTableBody.appendChild(row);
+                }
+
+                // --- Calculate 50km Intervals ---
+                let cumulativeDistance = 0;
+                let lastKmThreshold = 0;
+                let lastPointForKm = points[0];
+                
+                for (let i = 1; i < points.length; i++) {
+                    const currentPoint = points[i];
+                    cumulativeDistance += haversineDistance(lastPointForKm, currentPoint);
+                    lastPointForKm = currentPoint;
+                    
+                    if (cumulativeDistance >= lastKmThreshold + 50) {
+                        const distanceInKm = lastKmThreshold + 50;
+                        const timeInMs = currentPoint.time.getTime() - startTime.getTime();
+                        const paceMinPerKm = (timeInMs / 1000 / 60) / distanceInKm;
+                        
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${distanceInKm} km</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${formatTime(timeInMs)}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${paceMinPerKm.toFixed(2)}</td>
+                        `;
+                        fiftyKmTableBody.appendChild(row);
+                        lastKmThreshold = distanceInKm;
+                    }
+                }
+            }
+
+            function formatTime(ms) {
+                const hours = Math.floor(ms / (1000 * 60 * 60));
+                const minutes = Math.floor((ms % (1000 * 60 * 60)) / (1000 * 60));
+                const seconds = Math.floor((ms % (1000 * 60)) / 1000);
+                
+                let result = '';
+                if (hours > 0) result += `${hours}h `;
+                if (minutes > 0) result += `${minutes}m `;
+                result += `${seconds}s`;
+                
+                return result.trim();
+            }
+        });
+    </script>
+</body>
+</html>
