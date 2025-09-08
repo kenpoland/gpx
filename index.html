@@ -25,6 +25,7 @@
         <h1 class="text-4xl font-extrabold text-center text-gray-800 mb-2">GPX Data Analyzer</h1>
         <p class="text-center text-gray-500 mb-6">Upload a GPX file to view your activity's start and finish dates and times, total distance, total time, and average speed in two-hour and 50km intervals, including locations.</p>
 
+        <!-- File Input -->
         <div class="mb-8">
             <label for="gpx-file" class="block text-sm font-medium text-gray-700 mb-2">Select GPX File</label>
             <div class="mt-1 flex justify-center rounded-md border-2 border-dashed border-gray-300 px-6 pt-5 pb-6">
@@ -44,6 +45,7 @@
             </div>
         </div>
 
+        <!-- Progress and Status -->
         <div id="status-message" class="text-center text-sm font-medium text-red-500 mb-4 hidden"></div>
         <div id="loading-indicator" class="flex items-center justify-center space-x-2 text-blue-500 hidden mb-4">
             <svg class="animate-spin h-5 w-5 text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -53,6 +55,7 @@
             <span>Analyzing GPX data...</span>
         </div>
 
+        <!-- Results Display -->
         <div id="results" class="hidden">
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
                 <div class="bg-blue-50 p-6 rounded-xl shadow-inner border border-blue-200">
@@ -104,7 +107,8 @@
                         </tr>
                     </thead>
                     <tbody id="two-hour-data" class="bg-white divide-y divide-gray-200">
-                        </tbody>
+                        <!-- Speed data rows will be injected here by JavaScript -->
+                    </tbody>
                 </table>
             </div>
 
@@ -120,7 +124,8 @@
                         </tr>
                     </thead>
                     <tbody id="fifty-km-data" class="bg-white divide-y divide-gray-200">
-                        </tbody>
+                        <!-- 50 km data rows will be injected here by JavaScript -->
+                    </tbody>
                 </table>
             </div>
         </div>
@@ -426,6 +431,8 @@
             }
         });
     </script>
+    <!-- Google Maps API -->
+    <!-- You need to replace 'YOUR_API_KEY' with a valid API key with the Maps JavaScript API enabled -->
     <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCLK84zwZ8ysIS0KwlMB1hlJSP_O_wIJ3Y"></script>
 </body>
 </html>
