@@ -101,7 +101,7 @@
                             <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Interval</th>
                             <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Start Time</th>
                             <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">End Time</th>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Duration</th>
+                            <th scope="col" scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Duration</th>
                             <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Distance</th>
                             <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Avg Speed (km/h)</th>
                         </tr>
@@ -312,10 +312,10 @@
                 const totalDurationMs = finishTime.getTime() - startTime.getTime();
                 const totalDurationFormatted = formatTime(totalDurationMs);
                 
-                startDateEl.textContent = startTime.toDateString();
-                startTimeEl.textContent = startTime.toLocaleTimeString();
-                finishDateEl.textContent = finishTime.toDateString();
-                finishTimeEl.textContent = finishTime.toLocaleTimeString();
+                startDateEl.textContent = formatDate(startTime);
+                startTimeEl.textContent = formatTimeOnly(startTime);
+                finishDateEl.textContent = formatDate(finishTime);
+                finishTimeEl.textContent = formatTimeOnly(finishTime);
                 totalDistanceEl.textContent = `${totalDistanceKm.toFixed(2)} km`;
                 totalTimeEl.textContent = totalDurationFormatted;
 
@@ -343,8 +343,8 @@
                         const row = document.createElement('tr');
                         row.innerHTML = `
                             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${intervalIndex}</td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${currentIntervalStartTime.toLocaleTimeString()}</td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${currentPoint.time.toLocaleTimeString()}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${formatTimeOnly(currentIntervalStartTime)}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${formatTimeOnly(currentPoint.time)}</td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${(intervalDuration / 3600000).toFixed(2)} hrs</td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${currentIntervalDistance.toFixed(2)} km</td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-gray-900">${avgSpeed.toFixed(2)} km/h</td>
@@ -366,8 +366,8 @@
                     const row = document.createElement('tr');
                     row.innerHTML = `
                         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${intervalIndex}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${currentIntervalStartTime.toLocaleTimeString()}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${finishTime.toLocaleTimeString()}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${formatTimeOnly(currentIntervalStartTime)}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${formatTimeOnly(finishTime)}</td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${(intervalDuration / 3600000).toFixed(2)} hrs</td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${currentIntervalDistance.toFixed(2)} km</td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-gray-900">${avgSpeed.toFixed(2)} km/h</td>
@@ -415,9 +415,24 @@
                 
                 return result.trim();
             }
+
+            function formatDate(date) {
+                const year = date.getUTCFullYear();
+                const month = (date.getUTCMonth() + 1).toString().padStart(2, '0');
+                const day = date.getUTCDate().toString().padStart(2, '0');
+                return `${year}-${month}-${day}`;
+            }
+
+            function formatTimeOnly(date) {
+                const hours = date.getUTCHours().toString().padStart(2, '0');
+                const minutes = date.getUTCMinutes().toString().padStart(2, '0');
+                const seconds = date.getUTCSeconds().toString().padStart(2, '0');
+                return `${hours}:${minutes}:${seconds} UTC`;
+            }
         });
     </script>
     <!-- Google Maps API -->
+    <!-- You need to replace 'YOUR_API_KEY' with a valid API key with the Maps JavaScript API enabled -->
     <script src="https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY"></script>
 </body>
 </html>
